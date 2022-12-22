@@ -4,7 +4,20 @@ from graphics import *
 
 class Game:
     def __init__(self):
-        self.tutorial_text = ["Click the arrows to navigate the tutorial."]
+        self.tutorial_text = ["Click the arrows to navigate the tutorial.",
+                              "The objective of the game is to guess a random word.",
+                              "You can choose from different categories of words.",
+                              "There are 3 difficulty levels: Easy, Medium, and Hard.",
+                              "It affects the number of hints you get",
+                              "The number of hints for easy mode is half the length of the word (rounded down)."
+                              "It is one third the length of the word for medium mode, and zero for hard."
+                              "You can guess the letters of the word individually, by clicking on the on-screen keys",
+                              "Or you can guess the entire word by typing it in the text box, and pressing enter to "
+                              "submit.", "Invalid guesses will not use up lives",
+                              "The number of lives you get is equal to the length of the word you must guess.",
+                              "You can use a hint by pressing on the hint button.",
+                              "It will reveal a random letter in the word."]
+        self.tutorial_index = 0
         self.current_scene = "start_menu"
         self.correct_letters = 0
         self.correct_letters = 0
@@ -564,12 +577,16 @@ tutorial_scene["back_btn"].label.setSize(24)
 tutorial_scene["text_bg"] = Rectangle(Point(0, 500), Point(1280, 720))
 tutorial_scene["text_bg"].setFill("white")
 
+tutorial_scene["tutorial_text"] = Text(Point(640, 600), game.tutorial_text[0])
+tutorial_scene["tutorial_text"].setSize(24)
+tutorial_scene["tutorial_text"].setStyle("bold")
+
 tutorial_scene["forward_btn"] = Button(Point(1180, 450), Point(1280, 500), "->")
 tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
 tutorial_scene["forward_btn"].label.setSize(24)
 
 tutorial_scene["backwards_btn"] = Button(Point(0, 450), Point(100, 500), "<-")
-tutorial_scene["backwards_btn"].body.setFill(color_rgb(255, 0, 0))
+tutorial_scene["backwards_btn"].body.setFill("gray")
 tutorial_scene["backwards_btn"].label.setSize(24)
 
 draw_scene(win, start_menu)
