@@ -1,4 +1,5 @@
 import random
+import time
 from graphics import *
 
 
@@ -9,14 +10,18 @@ class Game:
                               "You can choose from different categories of words.",
                               "There are 3 difficulty levels: Easy, Medium, and Hard.",
                               "It affects the number of hints you get",
-                              "The number of hints for easy mode is half the length of the word (rounded down)."
-                              "It is one third the length of the word for medium mode, and zero for hard."
+                              "The number of hints for easy mode is half the length of the word (rounded down).",
+                              "It is one third the length of the word for medium mode, and zero for hard.",
                               "You can guess the letters of the word individually, by clicking on the on-screen keys",
                               "Or you can guess the entire word by typing it in the text box, and pressing enter to "
                               "submit.", "Invalid guesses will not use up lives",
                               "The number of lives you get is equal to the length of the word you must guess.",
                               "You can use a hint by pressing on the hint button.",
-                              "It will reveal a random letter in the word."]
+                              "It will reveal a random letter in the word.",
+                              "That's it! Press 'finish' to finish the tutorial"]
+        self.text_index = 0
+        self.scrolling = False
+        self.scrolling_text = ""
         self.tutorial_index = 0
         self.current_scene = "start_menu"
         self.correct_letters = 0
@@ -90,6 +95,7 @@ def start_game():
     for key in game_screen["keyboard"]:
         key.enabled = True
         key.body.setFill("white")
+        key.body.setOutline("black")
         key.label.setFill("black")
 
     game.guessed_letters.clear()
@@ -106,6 +112,7 @@ def start_game():
     game.lives = len(game.current_word)
     game_screen["lives_left"].setText(f"Lives left: {game.lives}")
     game_screen["hint_btn"].body.setFill(color_rgb(33, 151, 255))
+    game_screen["hint_btn"].body.setOutline(color_rgb(33, 151, 255))
 
     if game.difficulty == "easy":
         game.hints = int(len(game.current_word) / 2)
@@ -114,6 +121,7 @@ def start_game():
     elif game.difficulty == "hard":
         game.hints = 0
         game_screen["hint_btn"].body.setFill("gray")
+        game_screen["hint_btn"].body.setOutline("gray")
 
     game_screen["hints_left"].setText(f"Hints left: {game.hints}")
 
@@ -131,8 +139,28 @@ def on_click(click):
             draw_scene(win, choose_difficulty_menu)
 
         elif start_menu["tutorial_btn"].inside(pt):
+
             game.current_scene = "tutorial_scene"
+            tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+            tutorial_scene["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
+            tutorial_scene["forward_btn"].label.setText("->")
+            game.tutorial_index = 0
+            game.text_index = 0
+            game.scrolling_text = ""
+
+            tutorial_scene["backwards_btn"].body.setFill("gray")
+            tutorial_scene["backwards_btn"].body.setOutline("gray")
+            tutorial_scene["backwards_btn"].enabled = False
             draw_scene(win, tutorial_scene)
+
+            game.scrolling = True
+
+            for char in game.tutorial_text[game.tutorial_index]:
+                game.scrolling_text += char
+                tutorial_scene["tutorial_text"].setText(game.scrolling_text)
+                time.sleep(0.02)
+
+            game.scrolling = False
 
     elif game.current_scene == "choose_difficulty_menu":
 
@@ -202,7 +230,11 @@ def on_click(click):
 
                 game.hints -= 1
                 game_screen["hints_left"].setText(f"Hints left: {game.hints}")
-                hint_letter = random.choice(list(set(game.current_word)))
+                hint_letter = random.choice(list(set([letter for letter in game.current_word
+                                                      if letter not in game.guessed_letters])))
+
+                game.guessed_letters.append(hint_letter)
+                game.guessed_letters.sort()
 
                 new_str = ""
                 for j in range(len(game.current_word)):
@@ -220,6 +252,13 @@ def on_click(click):
             if game.hints == 0:
                 game_screen["hint_btn"].enabled = False
                 game_screen["hint_btn"].body.setFill("gray")
+                game_screen["hint_btn"].body.setOutline("gray")
+
+            if game.word_guess_progress == game.current_word.lower():
+                undraw_scene(win, game_screen)
+                draw_scene(win, win_screen)
+                game.current_scene = "win_screen"
+                win_screen["answer"].setText(f"The word was: '{game.current_word}'")
 
         else:
 
@@ -229,7 +268,8 @@ def on_click(click):
 
                     new_str = ""
                     key.body.setFill(color_rgb(148, 148, 148))
-                    game.guessed_letters.append(key.label.getText())
+                    key.body.setOutline(color_rgb(148, 148, 148))
+                    game.guessed_letters.append(key.label.getText().lower())
                     game.guessed_letters.sort()
                     key.enabled = False
 
@@ -299,6 +339,57 @@ def on_click(click):
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
 
+        elif tutorial_scene["forward_btn"].inside(pt) and game.tutorial_index != len(game.tutorial_text) - 1 \
+                and not game.scrolling:
+
+            game.tutorial_index += 1
+            game.text_index = 0
+            game.scrolling_text = ""
+
+            tutorial_scene["backwards_btn"].enabled = True
+            tutorial_scene["backwards_btn"].body.setFill("red")
+            tutorial_scene["backwards_btn"].body.setOutline("red")
+
+            if game.tutorial_index == len(game.tutorial_text) - 1:
+                tutorial_scene["forward_btn"].label.setText("Finish")
+                tutorial_scene["forward_btn"].body.setFill("purple")
+                tutorial_scene["forward_btn"].body.setOutline("purple")
+
+            game.scrolling = True
+            for char in game.tutorial_text[game.tutorial_index]:
+                game.scrolling_text += char
+                tutorial_scene["tutorial_text"].setText(game.scrolling_text)
+                time.sleep(0.02)
+            game.scrolling = False
+
+        elif tutorial_scene["backwards_btn"].inside(pt) and tutorial_scene["backwards_btn"].enabled \
+                and not game.scrolling:
+
+            game.tutorial_index -= 1
+            game.text_index = 0
+            game.scrolling_text = ""
+            tutorial_scene["forward_btn"].label.setText("->")
+            tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+            tutorial_scene["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
+
+            if game.tutorial_index == 0:
+                tutorial_scene["backwards_btn"].enabled = False
+                tutorial_scene["backwards_btn"].body.setFill("gray")
+                tutorial_scene["backwards_btn"].body.setOutline("gray")
+
+            game.scrolling = True
+            for char in game.tutorial_text[game.tutorial_index]:
+                game.scrolling_text += char
+                tutorial_scene["tutorial_text"].setText(game.scrolling_text)
+                time.sleep(0.02)
+            game.scrolling = False
+
+        elif tutorial_scene["forward_btn"].inside(pt) and game.tutorial_index == len(game.tutorial_text) - 1:
+
+            undraw_scene(win, tutorial_scene)
+            draw_scene(win, start_menu)
+            game.current_scene = "start_menu"
+
 
 def on_enter(event=None):
     if game.current_scene == "game_screen":
@@ -341,10 +432,129 @@ def on_enter(event=None):
             game_screen["word_guess_text"].setText("You have already guessed this word")
 
 
+def on_hover(event):
+    pt = Point(event.x, event.y)
+
+    if exit_btn.inside(pt):
+        exit_btn.body.setFill(color_rgb(255, 100, 100))
+        exit_btn.body.setOutline(color_rgb(255, 100, 100))
+    else:
+        exit_btn.body.setFill("red")
+        exit_btn.body.setOutline("red")
+
+    if game.current_scene == "start_menu":
+
+        if start_menu["play_btn"].inside(pt):
+            start_menu["play_btn"].body.setFill(color_rgb(210, 210, 210))
+            start_menu["play_btn"].body.setOutline(color_rgb(210, 210, 210))
+        else:
+            start_menu["play_btn"].body.setFill(color_rgb(255, 255, 255))
+            start_menu["play_btn"].body.setOutline(color_rgb(255, 255, 255))
+
+        if start_menu["tutorial_btn"].inside(pt):
+            start_menu["tutorial_btn"].body.setFill(color_rgb(255, 188, 112))
+            start_menu["tutorial_btn"].body.setOutline(color_rgb(255, 188, 112))
+        else:
+            start_menu["tutorial_btn"].body.setFill(color_rgb(255, 136, 0))
+            start_menu["tutorial_btn"].body.setOutline(color_rgb(255, 136, 0))
+
+    elif game.current_scene == "choose_difficulty_menu":
+
+        if choose_difficulty_menu["easy"].inside(pt):
+            choose_difficulty_menu["easy"].body.setFill(color_rgb(0, 255, 0))
+            choose_difficulty_menu["easy"].body.setOutline(color_rgb(0, 255, 0))
+        else:
+            choose_difficulty_menu["easy"].body.setFill(color_rgb(20, 200, 20))
+            choose_difficulty_menu["easy"].body.setOutline(color_rgb(20, 200, 20))
+
+        if choose_difficulty_menu["medium"].inside(pt):
+            choose_difficulty_menu["medium"].body.setFill(color_rgb(255, 255, 0))
+            choose_difficulty_menu["medium"].body.setOutline(color_rgb(255, 255, 0))
+        else:
+            choose_difficulty_menu["medium"].body.setFill(color_rgb(200, 200, 20))
+            choose_difficulty_menu["medium"].body.setOutline(color_rgb(200, 200, 20))
+
+        if choose_difficulty_menu["hard"].inside(pt):
+            choose_difficulty_menu["hard"].body.setFill(color_rgb(255, 0, 0))
+            choose_difficulty_menu["hard"].body.setOutline(color_rgb(255, 0, 0))
+        else:
+            choose_difficulty_menu["hard"].body.setFill(color_rgb(200, 20, 20))
+            choose_difficulty_menu["hard"].body.setOutline(color_rgb(200, 20, 20))
+
+        if choose_difficulty_menu["back"].inside(pt):
+            choose_difficulty_menu["back"].body.setFill(color_rgb(200, 200, 200))
+            choose_difficulty_menu["back"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            choose_difficulty_menu["back"].body.setFill(color_rgb(255, 255, 255))
+            choose_difficulty_menu["back"].body.setOutline(color_rgb(255, 255, 255))
+
+    elif game.current_scene == "choose_category_menu":
+
+        if choose_category_menu["animals"].inside(pt):
+            choose_category_menu["animals"].body.setFill(color_rgb(200, 200, 200))
+            choose_category_menu["animals"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            choose_category_menu["animals"].body.setFill(color_rgb(255, 255, 255))
+            choose_category_menu["animals"].body.setOutline(color_rgb(255, 255, 255))
+
+        if choose_category_menu["fruits"].inside(pt):
+            choose_category_menu["fruits"].body.setFill(color_rgb(200, 200, 200))
+            choose_category_menu["fruits"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            choose_category_menu["fruits"].body.setFill(color_rgb(255, 255, 255))
+            choose_category_menu["fruits"].body.setOutline(color_rgb(255, 255, 255))
+
+        if choose_category_menu["computer_science"].inside(pt):
+            choose_category_menu["computer_science"].body.setFill(color_rgb(200, 200, 200))
+            choose_category_menu["computer_science"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            choose_category_menu["computer_science"].body.setFill(color_rgb(255, 255, 255))
+            choose_category_menu["computer_science"].body.setOutline(color_rgb(255, 255, 255))
+
+        if choose_category_menu["sports"].inside(pt):
+            choose_category_menu["sports"].body.setFill(color_rgb(200, 200, 200))
+            choose_category_menu["sports"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            choose_category_menu["sports"].body.setFill(color_rgb(255, 255, 255))
+            choose_category_menu["sports"].body.setOutline(color_rgb(255, 255, 255))
+
+        if choose_category_menu["back"].inside(pt):
+            choose_category_menu["back"].body.setFill(color_rgb(200, 200, 200))
+            choose_category_menu["back"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            choose_category_menu["back"].body.setFill(color_rgb(255, 255, 255))
+            choose_category_menu["back"].body.setOutline(color_rgb(255, 255, 255))
+
+    elif game.current_scene == "game_screen":
+
+        if game_screen["new_game_btn"].inside(pt):
+            game_screen["new_game_btn"].body.setFill(color_rgb(161, 247, 195))
+            game_screen["new_game_btn"].body.setOutline(color_rgb(161, 247, 195))
+        else:
+            game_screen["new_game_btn"].body.setFill(color_rgb(8, 255, 107))
+            game_screen["new_game_btn"].body.setFill(color_rgb(8, 255, 107))
+
+        if game_screen["main_menu_btn"].inside(pt):
+            game_screen["main_menu_btn"].body.setFill(color_rgb(200, 200, 200))
+            game_screen["main_menu_btn"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            game_screen["main_menu_btn"].body.setFill(color_rgb(255, 255, 255))
+            game_screen["main_menu_btn"].body.setOutline(color_rgb(255, 255, 255))
+
+        if game_screen["hint_btn"].inside(pt):
+            game_screen["hint_btn"].body.setFill(color_rgb(161, 211, 255))
+            game_screen["hint_btn"].body.setOutline(color_rgb(161, 211, 255))
+        else:
+            game_screen["hint_btn"].body.setFill(color_rgb(33, 151, 255))
+            game_screen["hint_btn"].body.setOutline(color_rgb(33, 151, 255))
+
+
 win = GraphWin("Bridge Word Game", 1280, 720)
 
 exit_btn = Button(Point(0, 0), Point(50, 50), "X")
 exit_btn.body.setFill("red")
+exit_btn.body.setOutline("red")
+exit_btn.body.setOutline("red")
 exit_btn.label.setFill("white")
 exit_btn.label.setSize(20)
 exit_btn.label.setStyle("bold")
@@ -360,12 +570,15 @@ start_menu["name"].setStyle("bold")
 
 start_menu["play_btn"] = Button(Point(500, 350), Point(780, 450), "Play")
 start_menu["play_btn"].body.setFill("white")
+start_menu["play_btn"].body.setOutline("white")
 start_menu["play_btn"].label.setSize(36)
 
 start_menu["tutorial_btn"] = Button(Point(500, 500), Point(780, 600), "Tutorial")
 start_menu["tutorial_btn"].body.setFill("white")
+start_menu["tutorial_btn"].body.setOutline("white")
 start_menu["tutorial_btn"].label.setSize(36)
-start_menu["tutorial_btn"].body.setFill("orange")
+start_menu["tutorial_btn"].body.setFill(color_rgb(255, 136, 0))
+start_menu["tutorial_btn"].body.setOutline(color_rgb(255, 136, 0))
 
 choose_difficulty_menu = dict()
 
@@ -377,19 +590,23 @@ choose_difficulty_menu["choose_text"].setStyle("bold")
 choose_difficulty_menu["choose_text"].setTextColor("white")
 
 choose_difficulty_menu["easy"] = Button(Point(240, 350), Point(440, 450), "Easy")
-choose_difficulty_menu["easy"].body.setFill("green")
+choose_difficulty_menu["easy"].body.setFill(color_rgb(20, 200, 20))
+choose_difficulty_menu["easy"].body.setOutline(color_rgb(20, 200, 20))
 choose_difficulty_menu["easy"].label.setSize(36)
 
 choose_difficulty_menu["medium"] = Button(Point(540, 350), Point(740, 450), "Medium")
-choose_difficulty_menu["medium"].body.setFill("yellow")
+choose_difficulty_menu["medium"].body.setFill(color_rgb(255, 230, 0))
+choose_difficulty_menu["medium"].body.setOutline(color_rgb(255, 230, 0))
 choose_difficulty_menu["medium"].label.setSize(36)
 
 choose_difficulty_menu["hard"] = Button(Point(840, 350), Point(1040, 450), "Hard")
-choose_difficulty_menu["hard"].body.setFill("red")
+choose_difficulty_menu["hard"].body.setFill(color_rgb(200, 0, 0))
+choose_difficulty_menu["hard"].body.setOutline(color_rgb(200, 0, 0))
 choose_difficulty_menu["hard"].label.setSize(36)
 
 choose_difficulty_menu["back"] = Button(Point(0, 620), Point(200, 720), "Back")
 choose_difficulty_menu["back"].body.setFill("white")
+choose_difficulty_menu["back"].body.setOutline("white")
 choose_difficulty_menu["back"].label.setSize(36)
 
 choose_category_menu = dict()
@@ -403,22 +620,27 @@ choose_category_menu["choose_text"].setTextColor("white")
 
 choose_category_menu["animals"] = Button(Point(90, 350), Point(290, 450), "Animals")
 choose_category_menu["animals"].body.setFill("white")
+choose_category_menu["animals"].body.setOutline("white")
 choose_category_menu["animals"].label.setSize(36)
 
 choose_category_menu["fruits"] = Button(Point(390, 350), Point(590, 450), "Fruits")
 choose_category_menu["fruits"].body.setFill("white")
+choose_category_menu["fruits"].body.setOutline("white")
 choose_category_menu["fruits"].label.setSize(36)
 
 choose_category_menu["computer_science"] = Button(Point(690, 350), Point(890, 450), "Computer Science")
 choose_category_menu["computer_science"].body.setFill("white")
+choose_category_menu["computer_science"].body.setOutline("white")
 choose_category_menu["computer_science"].label.setSize(16)
 
 choose_category_menu["sports"] = Button(Point(990, 350), Point(1190, 450), "Sports")
 choose_category_menu["sports"].body.setFill("white")
+choose_category_menu["sports"].body.setOutline("white")
 choose_category_menu["sports"].label.setSize(36)
 
 choose_category_menu["back"] = Button(Point(0, 620), Point(200, 720), "Back")
 choose_category_menu["back"].body.setFill("white")
+choose_category_menu["back"].body.setOutline("white")
 choose_category_menu["back"].label.setSize(36)
 
 game_screen = dict()
@@ -427,6 +649,7 @@ game_screen["bg"] = Image(Point(640, 360), "./images/play_bg_1.png")
 
 game_screen["new_game_btn"] = Button(Point(0, 100), Point(200, 200), "New Game")
 game_screen["new_game_btn"].body.setFill(color_rgb(8, 255, 107))
+game_screen["new_game_btn"].body.setOutline(color_rgb(8, 255, 107))
 game_screen["new_game_btn"].label.setSize(24)
 
 alphabet_qwerty = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z",
@@ -437,6 +660,7 @@ game_screen["keyboard"] = list()
 for i in range(10):
     game_screen["keyboard"].append(Button(Point(390 + (i * 50), 450), Point(440 + (i * 50), 500), alphabet_qwerty[i]))
     game_screen["keyboard"][i].body.setFill("white")
+    game_screen["keyboard"][i].body.setOutline("black")
     game_screen["keyboard"][i].label.setSize(16)
     game_screen["keyboard"][i].label.setStyle("bold")
 
@@ -444,6 +668,7 @@ for i in range(9):
     game_screen["keyboard"].append(
         Button(Point(415 + (i * 50), 500), Point(465 + (i * 50), 550), alphabet_qwerty[i + 10]))
     game_screen["keyboard"][i + 10].body.setFill("white")
+    game_screen["keyboard"][i + 10].body.setOutline("white")
     game_screen["keyboard"][i + 10].label.setSize(16)
     game_screen["keyboard"][i + 10].label.setStyle("bold")
 
@@ -451,6 +676,7 @@ for i in range(7):
     game_screen["keyboard"].append(Button(Point(430 + (i * 50), 550), Point(480 + (i * 50), 600),
                                           alphabet_qwerty[i + 19]))
     game_screen["keyboard"][i + 19].body.setFill("white")
+    game_screen["keyboard"][i + 19].body.setOutline("white")
     game_screen["keyboard"][i + 19].label.setSize(16)
     game_screen["keyboard"][i + 19].label.setStyle("bold")
 
@@ -504,10 +730,12 @@ game_screen["hints_left"].setTextColor("white")
 
 game_screen["hint_btn"] = Button(Point(0, 300), Point(200, 400), "Hint")
 game_screen["hint_btn"].body.setFill(color_rgb(33, 151, 255))
+game_screen["hint_btn"].body.setOutline(color_rgb(33, 151, 255))
 game_screen["hint_btn"].label.setSize(24)
 
 game_screen["main_menu_btn"] = Button(Point(0, 500), Point(200, 600), "Exit To Main Menu")
 game_screen["main_menu_btn"].body.setFill(color_rgb(255, 255, 255))
+game_screen["main_menu_btn"].body.setOutline(color_rgb(255, 255, 255))
 game_screen["main_menu_btn"].label.setSize(16)
 
 win_screen = dict()
@@ -524,6 +752,7 @@ win_screen["win_text"].setTextColor("black")
 
 win_screen["main_menu_btn"] = Button(Point(480, 500), Point(800, 600), "Main Menu")
 win_screen["main_menu_btn"].body.setFill("white")
+win_screen["main_menu_btn"].body.setOutline("white")
 win_screen["main_menu_btn"].label.setSize(36)
 
 win_screen["answer_bg"] = Rectangle(Point(300, 200), Point(980, 300))
@@ -536,6 +765,7 @@ win_screen["answer"].setTextColor("black")
 
 win_screen["play_again_btn"] = Button(Point(100, 500), Point(400, 600), "Play Again")
 win_screen["play_again_btn"].body.setFill("green")
+win_screen["play_again_btn"].body.setOutline("green")
 win_screen["play_again_btn"].label.setSize(36)
 
 lose_screen = dict()
@@ -552,6 +782,7 @@ lose_screen["lose_text"].setTextColor("black")
 
 lose_screen["main_menu_btn"] = Button(Point(480, 500), Point(800, 600), "Main Menu")
 lose_screen["main_menu_btn"].body.setFill("white")
+lose_screen["main_menu_btn"].body.setOutline("white")
 lose_screen["main_menu_btn"].label.setSize(36)
 
 lose_screen["answer_bg"] = Rectangle(Point(300, 200), Point(980, 300))
@@ -564,6 +795,7 @@ lose_screen["answer"].setTextColor("black")
 
 lose_screen["play_again_btn"] = Button(Point(100, 500), Point(400, 600), "Play Again")
 lose_screen["play_again_btn"].body.setFill("green")
+lose_screen["play_again_btn"].body.setOutline("green")
 lose_screen["play_again_btn"].label.setSize(36)
 
 tutorial_scene = dict()
@@ -572,26 +804,30 @@ tutorial_scene["bg"] = Image(Point(640, 360), "./images/tutorial_bg.png")
 
 tutorial_scene["back_btn"] = Button(Point(0, 200), Point(200, 300), "Back")
 tutorial_scene["back_btn"].body.setFill(color_rgb(255, 255, 255))
+tutorial_scene["back_btn"].body.setOutline(color_rgb(255, 255, 255))
 tutorial_scene["back_btn"].label.setSize(24)
 
 tutorial_scene["text_bg"] = Rectangle(Point(0, 500), Point(1280, 720))
 tutorial_scene["text_bg"].setFill("white")
 
 tutorial_scene["tutorial_text"] = Text(Point(640, 600), game.tutorial_text[0])
-tutorial_scene["tutorial_text"].setSize(24)
+tutorial_scene["tutorial_text"].setSize(16)
 tutorial_scene["tutorial_text"].setStyle("bold")
 
 tutorial_scene["forward_btn"] = Button(Point(1180, 450), Point(1280, 500), "->")
 tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+tutorial_scene["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
 tutorial_scene["forward_btn"].label.setSize(24)
 
 tutorial_scene["backwards_btn"] = Button(Point(0, 450), Point(100, 500), "<-")
 tutorial_scene["backwards_btn"].body.setFill("gray")
+tutorial_scene["backwards_btn"].body.setOutline("gray")
 tutorial_scene["backwards_btn"].label.setSize(24)
 
 draw_scene(win, start_menu)
 
 win.bind_all("<Button-1>", on_click)
 win.bind_all("<Return>", on_enter)
+win.bind_all("<Motion>", on_hover)
 
 win.mainloop()
