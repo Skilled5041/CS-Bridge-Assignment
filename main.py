@@ -140,25 +140,25 @@ def on_click(click):
 
         elif start_menu["tutorial_btn"].inside(pt):
 
-            game.current_scene = "tutorial_scene"
-            tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
-            tutorial_scene["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
-            tutorial_scene["forward_btn"].label.setText("->")
+            game.current_scene = "tutorial_screen"
+            tutorial_screen["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+            tutorial_screen["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
+            tutorial_screen["forward_btn"].label.setText("->")
             game.tutorial_index = 0
             game.text_index = 0
             game.scrolling_text = ""
 
-            tutorial_scene["backwards_btn"].body.setFill("gray")
-            tutorial_scene["backwards_btn"].body.setOutline("gray")
-            tutorial_scene["backwards_btn"].enabled = False
-            draw_scene(win, tutorial_scene)
+            tutorial_screen["backwards_btn"].body.setFill("gray")
+            tutorial_screen["backwards_btn"].body.setOutline("gray")
+            tutorial_screen["backwards_btn"].enabled = False
+            draw_scene(win, tutorial_screen)
 
             game.scrolling = True
 
             for char in game.tutorial_text[game.tutorial_index]:
                 game.scrolling_text += char
-                tutorial_scene["tutorial_text"].setText(game.scrolling_text)
-                time.sleep(0.02)
+                tutorial_screen["tutorial_text"].setText(game.scrolling_text)
+                time.sleep(0.01)
 
             game.scrolling = False
 
@@ -332,61 +332,61 @@ def on_click(click):
             draw_scene(win, choose_difficulty_menu)
             game.current_scene = "choose_difficulty_menu"
 
-    elif game.current_scene == "tutorial_scene":
+    elif game.current_scene == "tutorial_screen":
 
-        if tutorial_scene["back_btn"].inside(pt):
-            undraw_scene(win, tutorial_scene)
+        if tutorial_screen["back_btn"].inside(pt):
+            undraw_scene(win, tutorial_screen)
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
 
-        elif tutorial_scene["forward_btn"].inside(pt) and game.tutorial_index != len(game.tutorial_text) - 1 \
+        elif tutorial_screen["forward_btn"].inside(pt) and game.tutorial_index != len(game.tutorial_text) - 1 \
                 and not game.scrolling:
 
             game.tutorial_index += 1
             game.text_index = 0
             game.scrolling_text = ""
 
-            tutorial_scene["backwards_btn"].enabled = True
-            tutorial_scene["backwards_btn"].body.setFill("red")
-            tutorial_scene["backwards_btn"].body.setOutline("red")
+            tutorial_screen["backwards_btn"].enabled = True
+            tutorial_screen["backwards_btn"].body.setFill("red")
+            tutorial_screen["backwards_btn"].body.setOutline("red")
 
             if game.tutorial_index == len(game.tutorial_text) - 1:
-                tutorial_scene["forward_btn"].label.setText("Finish")
-                tutorial_scene["forward_btn"].body.setFill("purple")
-                tutorial_scene["forward_btn"].body.setOutline("purple")
+                tutorial_screen["forward_btn"].label.setText("Finish")
+                tutorial_screen["forward_btn"].body.setFill(color_rgb(130, 47, 194))
+                tutorial_screen["forward_btn"].body.setOutline(color_rgb(130, 47, 194))
 
             game.scrolling = True
             for char in game.tutorial_text[game.tutorial_index]:
                 game.scrolling_text += char
-                tutorial_scene["tutorial_text"].setText(game.scrolling_text)
-                time.sleep(0.02)
+                tutorial_screen["tutorial_text"].setText(game.scrolling_text)
+                time.sleep(0.01)
             game.scrolling = False
 
-        elif tutorial_scene["backwards_btn"].inside(pt) and tutorial_scene["backwards_btn"].enabled \
+        elif tutorial_screen["backwards_btn"].inside(pt) and tutorial_screen["backwards_btn"].enabled \
                 and not game.scrolling:
 
             game.tutorial_index -= 1
             game.text_index = 0
             game.scrolling_text = ""
-            tutorial_scene["forward_btn"].label.setText("->")
-            tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
-            tutorial_scene["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
+            tutorial_screen["forward_btn"].label.setText("->")
+            tutorial_screen["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+            tutorial_screen["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
 
             if game.tutorial_index == 0:
-                tutorial_scene["backwards_btn"].enabled = False
-                tutorial_scene["backwards_btn"].body.setFill("gray")
-                tutorial_scene["backwards_btn"].body.setOutline("gray")
+                tutorial_screen["backwards_btn"].enabled = False
+                tutorial_screen["backwards_btn"].body.setFill("gray")
+                tutorial_screen["backwards_btn"].body.setOutline("gray")
 
             game.scrolling = True
             for char in game.tutorial_text[game.tutorial_index]:
                 game.scrolling_text += char
-                tutorial_scene["tutorial_text"].setText(game.scrolling_text)
-                time.sleep(0.02)
+                tutorial_screen["tutorial_text"].setText(game.scrolling_text)
+                time.sleep(0.01)
             game.scrolling = False
 
-        elif tutorial_scene["forward_btn"].inside(pt) and game.tutorial_index == len(game.tutorial_text) - 1:
+        elif tutorial_screen["forward_btn"].inside(pt) and game.tutorial_index == len(game.tutorial_text) - 1:
 
-            undraw_scene(win, tutorial_scene)
+            undraw_scene(win, tutorial_screen)
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
 
@@ -541,12 +541,79 @@ def on_hover(event):
             game_screen["main_menu_btn"].body.setFill(color_rgb(255, 255, 255))
             game_screen["main_menu_btn"].body.setOutline(color_rgb(255, 255, 255))
 
-        if game_screen["hint_btn"].inside(pt):
+        if game_screen["hint_btn"].inside(pt) and game_screen["hint_btn"].enabled:
             game_screen["hint_btn"].body.setFill(color_rgb(161, 211, 255))
             game_screen["hint_btn"].body.setOutline(color_rgb(161, 211, 255))
-        else:
+        elif game_screen["hint_btn"].enabled:
             game_screen["hint_btn"].body.setFill(color_rgb(33, 151, 255))
             game_screen["hint_btn"].body.setOutline(color_rgb(33, 151, 255))
+        else:
+            game_screen["hint_btn"].body.setFill("gray")
+            game_screen["hint_btn"].body.setOutline("gray")
+
+    elif game.current_scene == "win_screen":
+
+        if win_screen["main_menu_btn"].inside(pt):
+            win_screen["main_menu_btn"].body.setFill(color_rgb(50, 217, 95))
+            win_screen["main_menu_btn"].body.setOutline(color_rgb(50, 217, 95))
+        else:
+            win_screen["main_menu_btn"].body.setFill(color_rgb(50, 168, 82))
+            win_screen["main_menu_btn"].body.setOutline(color_rgb(50, 168, 82))
+
+        if win_screen["play_again_btn"].inside(pt):
+            win_screen["play_again_btn"].body.setFill(color_rgb(200, 200, 200))
+            win_screen["play_again_btn"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            win_screen["play_again_btn"].body.setFill(color_rgb(255, 255, 255))
+            win_screen["play_again_btn"].body.setOutline(color_rgb(255, 255, 255))
+
+    elif game.current_scene == "lose_screen":
+
+        if lose_screen["main_menu_btn"].inside(pt):
+            lose_screen["main_menu_btn"].body.setFill(color_rgb(50, 217, 95))
+            lose_screen["main_menu_btn"].body.setOutline(color_rgb(50, 217, 95))
+        else:
+            lose_screen["main_menu_btn"].body.setFill(color_rgb(50, 168, 82))
+            lose_screen["main_menu_btn"].body.setOutline(color_rgb(50, 168, 82))
+
+        if lose_screen["play_again_btn"].inside(pt):
+            lose_screen["play_again_btn"].body.setFill(color_rgb(200, 200, 200))
+            lose_screen["play_again_btn"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            lose_screen["play_again_btn"].body.setFill(color_rgb(255, 255, 255))
+            lose_screen["play_again_btn"].body.setOutline(color_rgb(255, 255, 255))
+
+    elif game.current_scene == "tutorial_screen":
+
+        if tutorial_screen["back_btn"].inside(pt):
+            tutorial_screen["back_btn"].body.setFill(color_rgb(200, 200, 200))
+            tutorial_screen["back_btn"].body.setOutline(color_rgb(200, 200, 200))
+        else:
+            tutorial_screen["back_btn"].body.setFill(color_rgb(255, 255, 255))
+            tutorial_screen["back_btn"].body.setOutline(color_rgb(255, 255, 255))
+
+        if tutorial_screen["forward_btn"].label.getText() == "->" and tutorial_screen["forward_btn"].inside(pt):
+            tutorial_screen["forward_btn"].body.setFill(color_rgb(179, 255, 179))
+            tutorial_screen["forward_btn"].body.setOutline(color_rgb(179, 255, 179))
+
+        elif tutorial_screen["forward_btn"].label.getText() == "->":
+            tutorial_screen["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+            tutorial_screen["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
+
+        if tutorial_screen["forward_btn"].label.getText() == "Finish" and tutorial_screen["forward_btn"].inside(pt):
+            tutorial_screen["forward_btn"].body.setFill(color_rgb(167, 54, 255))
+            tutorial_screen["forward_btn"].body.setOutline(color_rgb(167, 54, 255))
+
+        elif tutorial_screen["forward_btn"].label.getText() == "Finish":
+            tutorial_screen["forward_btn"].body.setFill(color_rgb(130, 47, 194))
+            tutorial_screen["forward_btn"].body.setOutline(color_rgb(130, 47, 194))
+
+        if tutorial_screen["backwards_btn"].inside(pt) and tutorial_screen["backwards_btn"].enabled:
+            tutorial_screen["backwards_btn"].body.setFill(color_rgb(255, 100, 100))
+            tutorial_screen["backwards_btn"].body.setOutline(color_rgb(255, 100, 100))
+        elif tutorial_screen["backwards_btn"].enabled:
+            tutorial_screen["backwards_btn"].body.setFill(color_rgb(255, 0, 0))
+            tutorial_screen["backwards_btn"].body.setOutline(color_rgb(255, 0, 0))
 
 
 win = GraphWin("Bridge Word Game", 1280, 720)
@@ -751,8 +818,8 @@ win_screen["win_text"].setStyle("bold")
 win_screen["win_text"].setTextColor("black")
 
 win_screen["main_menu_btn"] = Button(Point(480, 500), Point(800, 600), "Main Menu")
-win_screen["main_menu_btn"].body.setFill("white")
-win_screen["main_menu_btn"].body.setOutline("white")
+win_screen["main_menu_btn"].body.setFill(color_rgb(50, 168, 82))
+win_screen["main_menu_btn"].body.setOutline(color_rgb(50, 168, 82))
 win_screen["main_menu_btn"].label.setSize(36)
 
 win_screen["answer_bg"] = Rectangle(Point(300, 200), Point(980, 300))
@@ -764,8 +831,8 @@ win_screen["answer"].setStyle("bold")
 win_screen["answer"].setTextColor("black")
 
 win_screen["play_again_btn"] = Button(Point(100, 500), Point(400, 600), "Play Again")
-win_screen["play_again_btn"].body.setFill("green")
-win_screen["play_again_btn"].body.setOutline("green")
+win_screen["play_again_btn"].body.setFill("white")
+win_screen["play_again_btn"].body.setOutline("white")
 win_screen["play_again_btn"].label.setSize(36)
 
 lose_screen = dict()
@@ -781,8 +848,8 @@ lose_screen["lose_text"].setStyle("bold")
 lose_screen["lose_text"].setTextColor("black")
 
 lose_screen["main_menu_btn"] = Button(Point(480, 500), Point(800, 600), "Main Menu")
-lose_screen["main_menu_btn"].body.setFill("white")
-lose_screen["main_menu_btn"].body.setOutline("white")
+lose_screen["main_menu_btn"].body.setFill(color_rgb(50, 168, 82))
+lose_screen["main_menu_btn"].body.setOutline(color_rgb(50, 168, 82))
 lose_screen["main_menu_btn"].label.setSize(36)
 
 lose_screen["answer_bg"] = Rectangle(Point(300, 200), Point(980, 300))
@@ -794,35 +861,35 @@ lose_screen["answer"].setStyle("bold")
 lose_screen["answer"].setTextColor("black")
 
 lose_screen["play_again_btn"] = Button(Point(100, 500), Point(400, 600), "Play Again")
-lose_screen["play_again_btn"].body.setFill("green")
-lose_screen["play_again_btn"].body.setOutline("green")
+lose_screen["play_again_btn"].body.setFill("white")
+lose_screen["play_again_btn"].body.setOutline("white")
 lose_screen["play_again_btn"].label.setSize(36)
 
-tutorial_scene = dict()
+tutorial_screen = dict()
 
-tutorial_scene["bg"] = Image(Point(640, 360), "./images/tutorial_bg.png")
+tutorial_screen["bg"] = Image(Point(640, 360), "./images/tutorial_bg.png")
 
-tutorial_scene["back_btn"] = Button(Point(0, 200), Point(200, 300), "Back")
-tutorial_scene["back_btn"].body.setFill(color_rgb(255, 255, 255))
-tutorial_scene["back_btn"].body.setOutline(color_rgb(255, 255, 255))
-tutorial_scene["back_btn"].label.setSize(24)
+tutorial_screen["back_btn"] = Button(Point(0, 200), Point(200, 300), "Back")
+tutorial_screen["back_btn"].body.setFill(color_rgb(255, 255, 255))
+tutorial_screen["back_btn"].body.setOutline(color_rgb(255, 255, 255))
+tutorial_screen["back_btn"].label.setSize(24)
 
-tutorial_scene["text_bg"] = Rectangle(Point(0, 500), Point(1280, 720))
-tutorial_scene["text_bg"].setFill("white")
+tutorial_screen["text_bg"] = Rectangle(Point(0, 500), Point(1280, 720))
+tutorial_screen["text_bg"].setFill("white")
 
-tutorial_scene["tutorial_text"] = Text(Point(640, 600), game.tutorial_text[0])
-tutorial_scene["tutorial_text"].setSize(16)
-tutorial_scene["tutorial_text"].setStyle("bold")
+tutorial_screen["tutorial_text"] = Text(Point(640, 600), game.tutorial_text[0])
+tutorial_screen["tutorial_text"].setSize(16)
+tutorial_screen["tutorial_text"].setStyle("bold")
 
-tutorial_scene["forward_btn"] = Button(Point(1180, 450), Point(1280, 500), "->")
-tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
-tutorial_scene["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
-tutorial_scene["forward_btn"].label.setSize(24)
+tutorial_screen["forward_btn"] = Button(Point(1180, 450), Point(1280, 500), "->")
+tutorial_screen["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+tutorial_screen["forward_btn"].body.setOutline(color_rgb(0, 255, 0))
+tutorial_screen["forward_btn"].label.setSize(24)
 
-tutorial_scene["backwards_btn"] = Button(Point(0, 450), Point(100, 500), "<-")
-tutorial_scene["backwards_btn"].body.setFill("gray")
-tutorial_scene["backwards_btn"].body.setOutline("gray")
-tutorial_scene["backwards_btn"].label.setSize(24)
+tutorial_screen["backwards_btn"] = Button(Point(0, 450), Point(100, 500), "<-")
+tutorial_screen["backwards_btn"].body.setFill("gray")
+tutorial_screen["backwards_btn"].body.setOutline("gray")
+tutorial_screen["backwards_btn"].label.setSize(24)
 
 draw_scene(win, start_menu)
 
