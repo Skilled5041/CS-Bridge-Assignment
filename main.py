@@ -4,6 +4,8 @@ from graphics import *
 
 class Game:
     def __init__(self):
+        self.tutorial_text1 = Text(Point(300, 200),
+                                   "Welcome to the game! Click on the arrows to navigate the tutorial.")
         self.current_scene = "start_menu"
         self.correct_letters = 0
         self.correct_letters = 0
