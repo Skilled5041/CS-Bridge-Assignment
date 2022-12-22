@@ -116,6 +116,10 @@ def on_click(click):
             game.current_scene = "choose_difficulty_menu"
             draw_scene(win, choose_difficulty_menu)
 
+        elif start_menu["tutorial_btn"].inside(pt):
+            game.current_scene = "tutorial_scene"
+            draw_scene(win, tutorial_scene)
+
     elif game.current_scene == "choose_difficulty_menu":
 
         if choose_difficulty_menu["easy"].inside(pt) or choose_difficulty_menu["medium"].inside(pt) or \
@@ -274,13 +278,19 @@ def on_click(click):
             draw_scene(win, choose_difficulty_menu)
             game.current_scene = "choose_difficulty_menu"
 
+    elif game.current_scene == "tutorial_scene":
+
+        if tutorial_scene["back_btn"].inside(pt):
+            undraw_scene(win, tutorial_scene)
+            draw_scene(win, start_menu)
+            game.current_scene = "start_menu"
+
 
 def on_enter(event=None):
-
     if game.current_scene == "game_screen":
 
         if len(game_screen["guess_box"].getText()) == len(game.current_word) and \
-                game_screen["guess_box"].getText().isalpha() and\
+                game_screen["guess_box"].getText().isalpha() and \
                 game_screen["guess_box"].getText().lower() not in game.guessed_words:
 
             game.guessed_words.append(game_screen["guess_box"].getText().lower())
@@ -302,7 +312,6 @@ def on_enter(event=None):
                 game_screen["word_guess_text"].setText("Wrong guess!")
 
                 if game.lives == 0:
-
                     undraw_scene(win, game_screen)
                     draw_scene(win, lose_screen)
                     game.current_scene = "lose_screen"
@@ -338,6 +347,11 @@ start_menu["name"].setStyle("bold")
 start_menu["play_btn"] = Button(Point(500, 350), Point(780, 450), "Play")
 start_menu["play_btn"].body.setFill("white")
 start_menu["play_btn"].label.setSize(36)
+
+start_menu["tutorial_btn"] = Button(Point(500, 500), Point(780, 600), "Tutorial")
+start_menu["tutorial_btn"].body.setFill("white")
+start_menu["tutorial_btn"].label.setSize(36)
+start_menu["tutorial_btn"].body.setFill("orange")
 
 choose_difficulty_menu = dict()
 
@@ -541,6 +555,21 @@ lose_screen["play_again_btn"].label.setSize(36)
 tutorial_scene = dict()
 
 tutorial_scene["bg"] = Image(Point(640, 360), "./images/tutorial_bg.png")
+
+tutorial_scene["back_btn"] = Button(Point(0, 200), Point(200, 300), "Back")
+tutorial_scene["back_btn"].body.setFill(color_rgb(255, 255, 255))
+tutorial_scene["back_btn"].label.setSize(24)
+
+tutorial_scene["text_bg"] = Rectangle(Point(0, 500), Point(1280, 720))
+tutorial_scene["text_bg"].setFill("white")
+
+tutorial_scene["forward_btn"] = Button(Point(1180, 450), Point(1280, 500), "->")
+tutorial_scene["forward_btn"].body.setFill(color_rgb(0, 255, 0))
+tutorial_scene["forward_btn"].label.setSize(24)
+
+tutorial_scene["backwards_btn"] = Button(Point(0, 450), Point(100, 500), "<-")
+tutorial_scene["backwards_btn"].body.setFill(color_rgb(255, 0, 0))
+tutorial_scene["backwards_btn"].label.setSize(24)
 
 draw_scene(win, start_menu)
 
