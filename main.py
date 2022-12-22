@@ -14,6 +14,7 @@ class Game:
         self.guessed_letters = list()
         self.word_guess_progress = len(self.current_word) * "-"
         self.hints = 0
+        self.guessed_words = list()
 
 
 class Button:
@@ -78,6 +79,7 @@ def start_game():
         key.label.setFill("black")
 
     game.guessed_letters.clear()
+    game.guessed_words.clear()
     game.correct_letters = 0
     game_screen["guess_box"].setText("")
 
@@ -88,13 +90,18 @@ def start_game():
                                   f" {(len(game.current_word) - game.correct_letters) * ' '}")
 
     game.lives = len(game.current_word)
+    game_screen["lives_left"].setText(f"Lives left: {game.lives}")
+    game_screen["hint_btn"].body.setFill(color_rgb(33, 151, 255))
 
     if game.difficulty == "easy":
-        game.hints = 4
+        game.hints = int(len(game.current_word) / 2)
     elif game.difficulty == "medium":
-        game.hints = 2
+        game.hints = int(len(game.current_word) / 3)
     elif game.difficulty == "hard":
         game.hints = 0
+        game_screen["hint_btn"].body.setFill("gray")
+
+    game_screen["hints_left"].setText(f"Hints left: {game.hints}")
 
 
 def on_click(click):
@@ -111,23 +118,23 @@ def on_click(click):
 
     elif game.current_scene == "choose_difficulty_menu":
 
-        if choose_category_menu["easy"].inside(pt) or choose_category_menu["medium"].inside(pt) or \
-                choose_category_menu["hard"].inside(pt):
+        if choose_difficulty_menu["easy"].inside(pt) or choose_difficulty_menu["medium"].inside(pt) or \
+                choose_difficulty_menu["hard"].inside(pt):
 
-            if choose_category_menu["easy"].inside(pt):
+            if choose_difficulty_menu["easy"].inside(pt):
                 game.difficulty = "easy"
-            elif choose_category_menu["medium"].inside(pt):
+            elif choose_difficulty_menu["medium"].inside(pt):
                 game.difficulty = "medium"
-            elif choose_category_menu["hard"].inside(pt):
+            elif choose_difficulty_menu["hard"].inside(pt):
                 game.difficulty = "hard"
 
             undraw_scene(win, choose_difficulty_menu)
             draw_scene(win, choose_category_menu)
             game.current_scene = "choose_category_menu"
 
-        elif choose_category_menu["back"].inside(pt):
+        elif choose_difficulty_menu["back"].inside(pt):
 
-            undraw_scene(win, choose_category_menu)
+            undraw_scene(win, choose_difficulty_menu)
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
 
@@ -145,6 +152,12 @@ def on_click(click):
             elif choose_category_menu["sports"].inside(pt):
                 game.category = "sports"
 
+            undraw_scene(win, choose_category_menu)
+            draw_scene(win, game_screen)
+            game.current_scene = "game_screen"
+            game.current_word = random.choice(words[game.category])
+            start_game()
+
         elif choose_category_menu["back"].inside(pt):
 
             undraw_scene(win, choose_category_menu)
@@ -152,75 +165,157 @@ def on_click(click):
             game.current_scene = "choose_difficulty_menu"
 
     elif game.current_scene == "game_screen":
+
         if game_screen["new_game_btn"].inside(pt):
+
             undraw_scene(win, game_screen)
             draw_scene(win, choose_difficulty_menu)
             game.current_scene = "choose_difficulty_menu"
+
+        elif game_screen["main_menu_btn"].inside(pt):
+
+            undraw_scene(win, game_screen)
+            draw_scene(win, start_menu)
+            game.current_scene = "start_menu"
+
+        elif game_screen["hint_btn"].inside(pt):
+
+            if game.hints > 0:
+
+                game.hints -= 1
+                game_screen["hints_left"].setText(f"Hints left: {game.hints}")
+                hint_letter = random.choice(list(set(game.current_word)))
+
+                new_str = ""
+                for j in range(len(game.current_word)):
+                    if game.current_word[j].lower() == hint_letter:
+                        new_str += hint_letter
+                        game.correct_letters += 1
+                    else:
+                        new_str += game.word_guess_progress[j]
+
+                game.word_guess_progress = new_str
+                game_screen["guess_progress"].setText(f"Word: {game.word_guess_progress}")
+                game_screen["player"].setText(f"{game.correct_letters * ' '} X"
+                                              f" {(len(game.current_word) - game.correct_letters) * ' '}")
+
+            if game.hints == 0:
+                game_screen["hint_btn"].enabled = False
+                game_screen["hint_btn"].body.setFill("gray")
+
         else:
+
             for key in game_screen["keyboard"]:
-                if key.inside(pt) and key.label.getText() not in game.guessed_letters:
+
+                if key.inside(pt) and key.label.getText() not in game.guessed_letters and key.enabled:
+
                     new_str = ""
                     key.body.setFill(color_rgb(148, 148, 148))
                     game.guessed_letters.append(key.label.getText())
                     game.guessed_letters.sort()
+                    key.enabled = False
 
                     if key.label.getText().lower() in game.current_word.lower():
-                        key.enabled = False
+
                         for j in range(len(game.current_word)):
+
                             if game.current_word[j].lower() == key.label.getText().lower():
                                 new_str += key.label.getText().lower()
                                 game.correct_letters += 1
                             else:
                                 new_str += game.word_guess_progress[j]
+
                         game.word_guess_progress = new_str
                         game_screen["guess_progress"].setText(f"Word: {game.word_guess_progress}")
                         game_screen["player"].setText(f"{game.correct_letters * ' '} X"
                                                       f" {(len(game.current_word) - game.correct_letters) * ' '}")
+
                     else:
+
                         game.lives -= 1
+                        game_screen["lives_left"].setText(f"Lives left: {game.lives}")
                         game_screen["bridge"].setText(f"/{'-' * game.lives}"
                                                       f"{'#' * (len(game.current_word) - game.lives)}\\")
                     break
+
             if game.word_guess_progress == game.current_word.lower():
+
                 undraw_scene(win, game_screen)
                 draw_scene(win, win_screen)
                 game.current_scene = "win_screen"
                 win_screen["answer"].setText(f"The word was: '{game.current_word}'")
+
             elif game.lives == 0:
+
                 undraw_scene(win, game_screen)
                 draw_scene(win, lose_screen)
                 game.current_scene = "lose_screen"
                 lose_screen["answer"].setText(f"The word was: '{game.current_word}'")
+
     elif game.current_scene == "win_screen":
+
         if win_screen["main_menu_btn"].inside(pt):
             undraw_scene(win, win_screen)
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
+        elif win_screen["play_again_btn"].inside(pt):
+            undraw_scene(win, win_screen)
+            draw_scene(win, choose_difficulty_menu)
+            game.current_scene = "choose_difficulty_menu"
+
     elif game.current_scene == "lose_screen":
+
         if lose_screen["main_menu_btn"].inside(pt):
             undraw_scene(win, lose_screen)
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
+        elif lose_screen["play_again_btn"].inside(pt):
+            undraw_scene(win, lose_screen)
+            draw_scene(win, choose_difficulty_menu)
+            game.current_scene = "choose_difficulty_menu"
 
 
 def on_enter(event=None):
+
     if game.current_scene == "game_screen":
-        if len(game_screen["guess_box"].getText()) == len(game.current_word):
+
+        if len(game_screen["guess_box"].getText()) == len(game.current_word) and \
+                game_screen["guess_box"].getText().isalpha() and\
+                game_screen["guess_box"].getText().lower() not in game.guessed_words:
+
+            game.guessed_words.append(game_screen["guess_box"].getText().lower())
+
             if game_screen["guess_box"].getText().lower() == game.current_word.lower():
+
                 undraw_scene(win, game_screen)
                 draw_scene(win, win_screen)
                 game.current_scene = "win_screen"
                 win_screen["answer"].setText(f"The word was: '{game.current_word}'")
+
             else:
+
+                game_screen["lives_left"].setText(f"Lives left: {game.lives}")
                 game.lives -= 1
                 game_screen["bridge"].setText(f"/{'-' * game.lives}"
                                               f"{'#' * (len(game.current_word) - game.lives)}\\")
                 game_screen["guess_box"].setText("")
+                game_screen["word_guess_text"].setText("Wrong guess!")
+
                 if game.lives == 0:
+
                     undraw_scene(win, game_screen)
                     draw_scene(win, lose_screen)
                     game.current_scene = "lose_screen"
                     lose_screen["answer"].setText(f"The word was: '{game.current_word}'")
+
+        elif game_screen["guess_box"].getText().isalpha() is False:
+            game_screen["word_guess_text"].setText("Guess must only contain letters")
+
+        elif len(game_screen["guess_box"].getText()) != len(game.current_word):
+            game_screen["word_guess_text"].setText("Length of the word was too short or too long")
+
+        elif game_screen["guess_box"].getText().lower() in game.guessed_words:
+            game_screen["word_guess_text"].setText("You have already guessed this word")
 
 
 win = GraphWin("Bridge Word Game", 1280, 720)
@@ -344,7 +439,7 @@ words = {"fruits": ["apple", "banana", "orange", "grape", "watermelon"],
 game = Game()
 
 game_screen["word_guess_text"] = Text(Point(1000, 100), "Guess the entire word:")
-game_screen["word_guess_text"].setSize(24)
+game_screen["word_guess_text"].setSize(16)
 game_screen["word_guess_text"].setStyle("bold")
 game_screen["word_guess_text"].setTextColor("white")
 
@@ -366,6 +461,26 @@ game_screen["guess_progress"].setSize(24)
 game_screen["guess_progress"].setStyle("bold")
 game_screen["guess_progress"].setFace("courier")
 game_screen["guess_progress"].setTextColor("white")
+
+game_screen["lives_left"] = Text(Point(1100, 500), f"Lives Left: {game.lives}")
+game_screen["lives_left"].setSize(24)
+game_screen["lives_left"].setStyle("bold")
+game_screen["lives_left"].setFace("courier")
+game_screen["lives_left"].setTextColor("white")
+
+game_screen["hints_left"] = Text(Point(1100, 550), f"Hints Left: {game.hints}")
+game_screen["hints_left"].setSize(24)
+game_screen["hints_left"].setStyle("bold")
+game_screen["hints_left"].setFace("courier")
+game_screen["hints_left"].setTextColor("white")
+
+game_screen["hint_btn"] = Button(Point(0, 300), Point(200, 400), "Hint")
+game_screen["hint_btn"].body.setFill(color_rgb(33, 151, 255))
+game_screen["hint_btn"].label.setSize(24)
+
+game_screen["main_menu_btn"] = Button(Point(0, 500), Point(200, 600), "Exit To Main Menu")
+game_screen["main_menu_btn"].body.setFill(color_rgb(255, 255, 255))
+game_screen["main_menu_btn"].label.setSize(16)
 
 win_screen = dict()
 
@@ -391,6 +506,10 @@ win_screen["answer"].setSize(24)
 win_screen["answer"].setStyle("bold")
 win_screen["answer"].setTextColor("black")
 
+win_screen["play_again_btn"] = Button(Point(100, 500), Point(400, 600), "Play Again")
+win_screen["play_again_btn"].body.setFill("green")
+win_screen["play_again_btn"].label.setSize(36)
+
 lose_screen = dict()
 
 lose_screen["bg"] = Image(Point(640, 360), "./images/lose_bg.png")
@@ -414,6 +533,14 @@ lose_screen["answer"] = Text(Point(640, 250), f"The word was: '{game.current_wor
 lose_screen["answer"].setSize(24)
 lose_screen["answer"].setStyle("bold")
 lose_screen["answer"].setTextColor("black")
+
+lose_screen["play_again_btn"] = Button(Point(100, 500), Point(400, 600), "Play Again")
+lose_screen["play_again_btn"].body.setFill("green")
+lose_screen["play_again_btn"].label.setSize(36)
+
+tutorial_scene = dict()
+
+tutorial_scene["bg"] = Image(Point(640, 360), "./images/tutorial_bg.png")
 
 draw_scene(win, start_menu)
 
