@@ -13,6 +13,7 @@ class Game:
         self.lives = len(self.current_word)
         self.guessed_letters = list()
         self.word_guess_progress = len(self.current_word) * "-"
+        self.hints = 0
 
 
 class Button:
@@ -78,13 +79,22 @@ def start_game():
 
     game.guessed_letters.clear()
     game.correct_letters = 0
+    game_screen["guess_box"].setText("")
 
     game.word_guess_progress = len(game.current_word) * "-"
     game_screen["guess_progress"].setText(f"Word: {game.word_guess_progress}")
     game_screen["bridge"].setText(f"/{len(game.current_word) * '-'}\\")
     game_screen["player"].setText(f"{game.correct_letters * ' '} X"
                                   f" {(len(game.current_word) - game.correct_letters) * ' '}")
+
     game.lives = len(game.current_word)
+
+    if game.difficulty == "easy":
+        game.hints = 4
+    elif game.difficulty == "medium":
+        game.hints = 2
+    elif game.difficulty == "hard":
+        game.hints = 0
 
 
 def on_click(click):
@@ -92,63 +102,55 @@ def on_click(click):
 
     if exit_btn.inside(pt):
         win.quit()
+
     if game.current_scene == "start_menu":
+
         if start_menu["play_btn"].inside(pt):
             game.current_scene = "choose_difficulty_menu"
             draw_scene(win, choose_difficulty_menu)
+
     elif game.current_scene == "choose_difficulty_menu":
-        if choose_difficulty_menu["easy"].inside(pt):
-            game.difficulty = "easy"
+
+        if choose_category_menu["easy"].inside(pt) or choose_category_menu["medium"].inside(pt) or \
+                choose_category_menu["hard"].inside(pt):
+
+            if choose_category_menu["easy"].inside(pt):
+                game.difficulty = "easy"
+            elif choose_category_menu["medium"].inside(pt):
+                game.difficulty = "medium"
+            elif choose_category_menu["hard"].inside(pt):
+                game.difficulty = "hard"
+
             undraw_scene(win, choose_difficulty_menu)
             draw_scene(win, choose_category_menu)
             game.current_scene = "choose_category_menu"
-        elif choose_difficulty_menu["medium"].inside(pt):
-            game.difficulty = "medium"
-            undraw_scene(win, choose_difficulty_menu)
-            draw_scene(win, choose_category_menu)
-            game.current_scene = "choose_category_menu"
-        elif choose_difficulty_menu["hard"].inside(pt):
-            game.difficulty = "hard"
-            undraw_scene(win, choose_difficulty_menu)
-            draw_scene(win, choose_category_menu)
-            game.current_scene = "choose_category_menu"
-        elif choose_difficulty_menu["back"].inside(pt):
-            undraw_scene(win, choose_difficulty_menu)
+
+        elif choose_category_menu["back"].inside(pt):
+
+            undraw_scene(win, choose_category_menu)
             draw_scene(win, start_menu)
             game.current_scene = "start_menu"
+
     elif game.current_scene == "choose_category_menu":
-        if choose_category_menu["fruits"].inside(pt):
-            category = "fruits"
-            undraw_scene(win, choose_category_menu)
-            draw_scene(win, game_screen)
-            game.current_word = random.choice(words[category])
-            game.current_scene = "game_screen"
-            start_game()
-        elif choose_category_menu["animals"].inside(pt):
-            category = "animals"
-            undraw_scene(win, choose_category_menu)
-            draw_scene(win, game_screen)
-            game.current_word = random.choice(words[category])
-            game.current_scene = "game_screen"
-            start_game()
-        elif choose_category_menu["computer_science"].inside(pt):
-            category = "computer_science"
-            undraw_scene(win, choose_category_menu)
-            draw_scene(win, game_screen)
-            game.current_word = random.choice(words[category])
-            game.current_scene = "game_screen"
-            start_game()
-        elif choose_category_menu["sports"].inside(pt):
-            category = "sports"
-            undraw_scene(win, choose_category_menu)
-            draw_scene(win, game_screen)
-            game.current_word = random.choice(words[category])
-            game.current_scene = "game_screen"
-            start_game()
+
+        if choose_category_menu["fruits"].inside(pt) or choose_category_menu["animals"].inside(pt) or \
+                choose_category_menu["computer_science"].inside(pt) or choose_category_menu["sports"].inside(pt):
+
+            if choose_category_menu["fruits"].inside(pt):
+                game.category = "fruits"
+            elif choose_category_menu["animals"].inside(pt):
+                game.category = "animals"
+            elif choose_category_menu["computer_science"].inside(pt):
+                game.category = "computer_science"
+            elif choose_category_menu["sports"].inside(pt):
+                game.category = "sports"
+
         elif choose_category_menu["back"].inside(pt):
+
             undraw_scene(win, choose_category_menu)
             draw_scene(win, choose_difficulty_menu)
             game.current_scene = "choose_difficulty_menu"
+
     elif game.current_scene == "game_screen":
         if game_screen["new_game_btn"].inside(pt):
             undraw_scene(win, game_screen)
@@ -202,7 +204,6 @@ def on_click(click):
 
 
 def on_enter(event=None):
-    print("enter pressed")
     if game.current_scene == "game_screen":
         if len(game_screen["guess_box"].getText()) == len(game.current_word):
             if game_screen["guess_box"].getText().lower() == game.current_word.lower():
@@ -416,6 +417,7 @@ lose_screen["answer"].setTextColor("black")
 
 draw_scene(win, start_menu)
 
-win.bind("<Button-1>", on_click)
+win.bind_all("<Button-1>", on_click)
+win.bind_all("<Return>", on_enter)
 
 win.mainloop()
